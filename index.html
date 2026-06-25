@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Personal Darkroom Master - PRO MAX</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Darkroom">
+    
+    <style>
+        :root {
+            --bg-color: #080808;
+            --card-bg: #151515;
+            --text-color: #e5e5e5;
+            --accent-color: #ffffff;
+            --accent-glow: rgba(255, 255, 255, 0.15);
+            --border-color: #333333;
+            --status-good: #34c759;
+            --status-warning: #ff9f0a;
+            --status-danger: #ff453a;
+            --status-info: #0a84ff;
+            --status-manual: #bf5af2;
+        }
+
+        .safelight-mode {
+            --bg-color: #050000;
+            --card-bg: #100000;
+            --text-color: #ff3b30;
+            --accent-color: #ff453a;
+            --accent-glow: rgba(255, 59, 48, 0.3);
+            --border-color: #440000;
+            --status-good: #cc0000;
+            --status-warning: #ff7700;
+            --status-danger: #ff0000;
+            --status-info: #ff2200;
+            --status-manual: #ff3366;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); transition: all 0.3s; padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 1300px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 25px; margin-top: 5px;}
+        
+        .panel { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.8); }
+        h2 { font-size: 1.1rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--accent-color); font-weight: 600; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 6px; color: #a1a1a6; }
+        select, input { width: 100%; padding: 10px; background-color: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 4px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        select:focus, input:focus { border-color: var(--accent-color); }
+        select:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        input[type="checkbox"] { width: auto; padding: 0; cursor: pointer; transform: scale(1.2); accent-color: var(--status-info); }
+
+        .info-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label { font-size: 0.85rem; color: #888; }
+        .info-value { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); }
+        .info-highlight { color: var(--status-warning); font-size: 1.2rem; }
+
+        .mixer-box { border-left: 4px solid var(--status-info); }
+        .safelight-mode .mixer-box { border-color: var(--status-danger); }
+        .mixer-result { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: center; }
+        .mixer-item { background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; }
+        .mixer-item span { display: block; font-size: 0.75rem; color: #999; margin-bottom: 4px;}
+        .mixer-item strong { font-size: 1.2rem; color: var(--text-color); }
+
+        .timer-display { text-align: center; padding: 10px 0; }
+        .current-stage-name { font-size: 1.1rem; font-weight: bold; color: var(--status-warning); text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+        .action-time { font-size: 6rem; font-weight: 200; font-variant-numeric: tabular-nums; color: var(--accent-color); text-shadow: 0 0 25px var(--accent-glow); line-height: 1; margin: 10px 0; }
+        .action-time.manual-mode { font-size: 4rem; color: var(--status-manual); text-shadow: 0 0 20px rgba(191, 90, 242, 0.3); font-weight: bold;}
+        
+        @keyframes flashDanger { 0%, 100% { color: var(--status-danger); text-shadow: 0 0 20px var(--status-danger); } 50% { color: #fff; text-shadow: 0 0 40px #fff; } }
+        .pour-out-mode { animation: flashDanger 0.5s infinite; font-weight: bold; }
+        
+        .agitation-desc { font-size: 1.05rem; color: #ccc; line-height: 1.5; min-height: 50px; margin-top: 15px; font-weight: 500; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--accent-color); white-space: pre-wrap; }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .btn { padding: 15px; border: 1px solid var(--border-color); background: #222; color: #fff; font-size: 1rem; font-weight: 600; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;}
+        .btn:hover { background: #333; }
+        .btn-primary { background-color: var(--accent-color); color: #000; border: none; }
+        .btn-primary:hover { background-color: #ddd; transform: translateY(-1px); }
+        .safelight-mode .btn-primary { color: #fff; background-color: var(--accent-color); }
+        .btn-manual { background-color: var(--status-manual); color: #fff; border: none; }
+        .btn-manual:hover { background-color: #a044ce; }
+
+        .workflow-list { list-style: none; margin-top: 20px; height: 350px; overflow-y: auto; padding-right: 5px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding-top: 10px;}
+        .workflow-item { padding: 8px 10px; border-bottom: 1px dashed #2a2a2a; color: #555; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;}
+        .workflow-item.sub-step { padding-left: 20px; font-size: 0.8rem; }
+        .workflow-item.active { color: var(--text-color); border-left: 3px solid var(--accent-color); padding-left: 20px; background: rgba(255,255,255,0.05); font-weight: bold;}
+        .workflow-item.completed { color: var(--status-good); text-decoration: line-through; opacity: 0.3;}
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
+
+        @media (max-width: 950px) { 
+            .container { grid-template-columns: 1fr; gap: 15px; } 
+            body { padding: 10px; }
+            .panel { padding: 15px; }
+            h2 { font-size: 1rem; margin-bottom: 12px; }
+            .workflow-list { height: 220px; margin-top: 12px; } 
+            .action-time { font-size: 4.5rem; margin: 5px 0; } 
+            .action-time.manual-mode { font-size: 3rem; }
+            .agitation-desc { font-size: 0.95rem; min-height: 40px; margin-top: 10px; padding: 8px; }
+            .btn { padding: 12px; font-size: 0.9rem; } 
+            .btn-grid { gap: 8px; margin-top: 15px; }
+            #dev-total-timer-container { font-size: 1rem; padding: 6px 12px; margin-bottom: 8px; }
+            #dev-total-time { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel">
+        <h2>OFFICIAL DATA & MIXER</h2>
+        
+        <div class="form-group">
+            <label for="film-select">底片型號 (Film Stock)</label>
+            <select id="film-select" onchange="handleFilmChange()"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="dev-select">顯影液與稀釋比 (Developer & Dilution)</label>
+            <select id="dev-select" onchange="handleDevChange()"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="iso-select">精確曝光指數 (EI) - 僅顯示官方有數據之項目</label>
+            <select id="iso-select" onchange="updateProcess()"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="target-temp">實際藥水溫度 (Target Temp °C)</label>
+            <input type="number" id="target-temp" value="20.0" step="0.5" min="15" max="27" oninput="updateProcess()">
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border-left: 3px solid var(--status-info);">
+            <input type="checkbox" id="pre-wet-checkbox" onchange="updateProcess()">
+            <label for="pre-wet-checkbox" style="margin-bottom: 0; color: #fff; cursor: pointer;">啟用預濕步驟 (Pre-wet)</label>
+        </div>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label">官方 20°C 基準時間</span>
+                <span class="info-value" id="base-time-display">-- : --</span>
+            </div>
+            <div class="info-row" style="border-top: 1px dashed var(--border-color); margin-top: 8px; padding-top: 8px;">
+                <span class="info-label">溫度補償後顯影時間</span>
+                <span class="info-value info-highlight" id="final-time-display">-- : --</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">全流程預估總計時間</span>
+                <span class="info-value" id="total-process-time">-- : --</span>
+            </div>
+        </div>
+
+        <div class="info-box mixer-box">
+            <label style="color: var(--status-info); font-weight: bold; margin-bottom: 10px;">🧪 藥水調配計算機 (ml)</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="font-size: 0.85rem; color: #ccc;">沖片罐總容量:</span>
+                <input type="number" id="tank-volume" value="600" step="50" min="100" style="width: 100px; padding: 6px;" oninput="calculateVolume()">
+            </div>
+            <div class="mixer-result">
+                <div class="mixer-item">
+                    <span>顯影濃縮液 (Concentrate)</span>
+                    <strong id="vol-concentrate">-- ml</strong>
+                </div>
+                <div class="mixer-item">
+                    <span>純水 (Water)</span>
+                    <strong id="vol-water">-- ml</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <h2>PROCESS MONITOR</h2>
+            <div class="timer-display">
+                <div class="current-stage-name" id="action-title">系統待機中</div>
+                <div class="action-time" id="action-time">00:00</div>
+                
+                <div id="dev-total-timer-container" style="display: none; font-size: 1.1rem; color: var(--status-warning); font-weight: bold; margin-bottom: 12px; letter-spacing: 1px; background: rgba(255, 159, 10, 0.15); padding: 8px 16px; border-radius: 6px; border: 1px dashed var(--status-warning);">
+                    顯影總剩餘時間 <span id="dev-total-time" style="font-variant-numeric: tabular-nums; font-size: 1.4rem; margin-left: 8px;">00:00</span>
+                </div>
+
+                <div class="agitation-desc" id="agitation-desc">確認左側數據後，請準備好第一劑藥水，點擊啟動。</div>
+            </div>
+            <ul class="workflow-list" id="workflow-ui"></ul>
+        </div>
+
+        <div class="btn-grid">
+            <button class="btn btn-primary" id="btn-start" onclick="toggleTimer()">啟動排程 (START)</button>
+            <button class="btn" id="btn-reset" onclick="resetTimer()">系統重置</button>
+            <button class="btn" onclick="toggleSafelight()" style="grid-column: span 2; background: #2a0000; color: #ff3b30; border-color: #550000;">切換暗房安全燈 (SAFELIGHT)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ilfordDB = {
+        "panf_plus": { name: "PAN F PLUS", box: 50, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 25: 420, 50: 480 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 50: 240 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 50: 330 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 50: 240 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 50: 255 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 50: 270 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 50: 270 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 50: 360 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 50: 750 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 50: 270 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 50: 540 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 50: 630 } },
+            "perceptol_1_3": { name: "PERCEPTOL (1+3)", ratio: 3, isos: { 50: 900 } }
+        }},
+        "fp4_plus": { name: "FP4 PLUS", box: 125, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 50: 480, 125: 600, 200: 720 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 125: 360 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 125: 480, 200: 720 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 125: 240 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 50: 360, 125: 360, 200: 480 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 50: 300, 125: 255 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 125: 450 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 125: 390 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 125: 510 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 125: 900 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 125: 360 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 125: 600, 200: 840 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 125: 840, 200: 1080 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 50: 540, 125: 780 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 125: 900 } },
+            "perceptol_1_3": { name: "PERCEPTOL (1+3)", ratio: 3, isos: { 125: 1020 } }
+        }},
+        "hp5_plus": { name: "HP5 PLUS", box: 400, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 400: 540, 800: 600, 1600: 780, 3200: 1200 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 400: 210, 800: 300, 1600: 450, 3200: 660 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 400: 390, 800: 570, 1600: 840 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 400: 540 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 400: 210, 800: 300, 1600: 450, 3200: 660 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 400: 390, 800: 570, 1600: 840 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 400: 390, 800: 810 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 400: 660, 800: 1170 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 400: 450, 800: 630, 1600: 840 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 400: 780, 800: 990 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 400: 1200 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 400: 390, 800: 480, 1600: 660, 3200: 960 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 400: 720, 800: 900 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 400: 1380 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 400: 780 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 400: 1080 } },
+            "perceptol_1_3": { name: "PERCEPTOL (1+3)", ratio: 3, isos: { 400: 1500 } }
+        }},
+        "delta_100": { name: "DELTA 100 PRO", box: 100, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 50: 630, 100: 750, 200: 840 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 100: 300, 200: 360 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 100: 450, 200: 600 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 100: 300, 200: 360 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 100: 450, 200: 600 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 100: 300 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 100: 450 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 50: 420, 100: 510, 200: 630 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 100: 600, 200: 660 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 100: 900, 200: 1200 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 100: 390, 200: 480 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 100: 600, 200: 840 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 100: 840, 200: 1200 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 100: 720 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 100: 780, 200: 1020 } },
+            "perceptol_1_3": { name: "PERCEPTOL (1+3)", ratio: 3, isos: { 100: 960, 200: 1320 } }
+        }},
+        "delta_400": { name: "DELTA 400 PRO", box: 400, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 200: 360, 400: 480, 500: 570, 800: 630, 1600: 810, 3200: 1080 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 400: 240, 800: 330, 1600: 450, 3200: 780 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 400: 450, 800: 600, 1600: 810 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 400: 690, 800: 1020 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 400: 240, 800: 330, 1600: 450, 3200: 780 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 400: 450, 800: 600, 1600: 810 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 400: 420, 800: 840 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 400: 720, 800: 1230 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 200: 420, 400: 570, 500: 690, 800: 870, 1600: 1140 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 400: 840, 800: 1050 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 400: 390, 500: 450, 800: 510, 1600: 630, 3200: 840 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 400: 690, 800: 810, 1600: 930, 3200: 1140 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 400: 900 } }
+        }},
+        "delta_3200": { name: "DELTA 3200 PRO", box: 3200, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 400: 360, 800: 420, 1600: 480, 3200: 570, 6400: 750, 12500: 1020 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 1600: 300, 3200: 480, 6400: 780 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 1600: 360, 3200: 450, 6400: 540, 12500: 870 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 1600: 300, 3200: 480, 6400: 780 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 1600: 360, 3200: 450, 6400: 540, 12500: 870 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 1600: 360, 3200: 450, 6400: 600, 12500: 660 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 3200: 660, 6400: 780, 12500: 930, 25000: 1020 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 400: 420, 800: 480, 1600: 570, 3200: 630, 6400: 780, 12500: 1020 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 3200: 630 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 400: 360, 800: 420, 1600: 480, 3200: 540, 6400: 720, 12500: 990 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 3200: 690 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 3200: 810 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 1600: 660, 3200: 780, 6400: 900, 12500: 1080 } }
+        }},
+        "ortho_plus": { name: "ORTHO PLUS", box: 80, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 80: 630 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 80: 360 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 80: 660 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 80: 240 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 80: 360 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 80: 300 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 80: 540 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 80: 510 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 80: 630 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 80: 510 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 80: 690 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 80: 780 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 80: 870 } }
+        }},
+        "sfx_200": { name: "SFX 200", box: 200, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 200: 600, 400: 840 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 200: 540, 400: 780 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 200: 660 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 200: 540, 400: 780 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 200: 360, 400: 510 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 200: 450 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 200: 600, 400: 840 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 200: 1020 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 200: 540, 400: 900 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 200: 930 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 200: 870, 400: 1200 } }
+        }},
+        "kentmere_100": { name: "KENTMERE PAN 100", box: 100, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 50: 510, 100: 630, 200: 750 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 100: 330, 200: 420 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 100: 420, 200: 630 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 100: 240, 200: 300 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 100: 330, 200: 420 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 100: 300 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 100: 270, 200: 450 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 50: 420, 100: 540, 200: 660 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 100: 510, 200: 690 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 100: 1050 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 100: 510, 200: 540 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 100: 630, 200: 840 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 100: 570, 200: 750 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 100: 810, 200: 930 } }
+        }},
+        "kentmere_400": { name: "KENTMERE PAN 400", box: 400, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 320: 690, 400: 780, 800: 960 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 400: 270, 800: 390 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 400: 480, 800: 750 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 400: 660 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 400: 270, 800: 390 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 400: 480, 800: 750 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 400: 390, 800: 900 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 400: 660, 800: 1500 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 400: 480, 800: 600 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 400: 990, 800: 1230 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 400: 1530 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 400: 480, 800: 600, 1600: 900 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 400: 900, 800: 1140 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 400: 960 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 400: 1380 } }
+        }}
+    };
+
+    let currentStepIndex = 0; let timeLeft = 0; let timerInterval = null; let isRunning = false; let workflow = [];
+    let currentDevTimeLeft = 0; 
+
+    function playBeep(freq = 600, duration = 0.1) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+            osc.stop(ctx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60); const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function initUI() {
+        const filmSelect = document.getElementById('film-select');
+        filmSelect.innerHTML = "";
+        for (const [key, data] of Object.entries(ilfordDB)) {
+            filmSelect.add(new Option(`${data.name} (Box ISO ${data.box})`, key));
+        }
+        filmSelect.value = "hp5_plus";
+        handleFilmChange();
+    }
+
+    function handleFilmChange() {
+        const filmKey = document.getElementById('film-select').value;
+        const devs = ilfordDB[filmKey].devs;
+        const devSelect = document.getElementById('dev-select');
+        devSelect.innerHTML = "";
+        for (const [key, dev] of Object.entries(devs)) { devSelect.add(new Option(dev.name, key)); }
+        handleDevChange();
+    }
+
+    function handleDevChange() {
+        const filmKey = document.getElementById('film-select').value;
+        const devKey = document.getElementById('dev-select').value;
+        const isos = ilfordDB[filmKey].devs[devKey].isos;
+        const boxISO = ilfordDB[filmKey].box;
+        
+        const isoSelect = document.getElementById('iso-select');
+        isoSelect.innerHTML = "";
+        for (const [iso, time] of Object.entries(isos)) {
+            let label = `ISO ${iso}`;
+            if (parseInt(iso) === boxISO) label += " (Box Speed N)";
+            else if (parseInt(iso) > boxISO) label += " (Push 增感)";
+            else label += " (Pull 減感)";
+            isoSelect.add(new Option(label, iso));
+        }
+        updateProcess();
+    }
+
+    function calculateVolume() {
+        const filmKey = document.getElementById('film-select').value;
+        const devKey = document.getElementById('dev-select').value;
+        if(!devKey) return;
+        const ratio = ilfordDB[filmKey].devs[devKey].ratio;
+        const tankVolume = parseFloat(document.getElementById('tank-volume').value) || 600;
+        
+        let concentrate, water;
+        if (ratio === 0) { concentrate = tankVolume; water = 0; } 
+        else { concentrate = tankVolume / (1 + ratio); water = tankVolume - concentrate; }
+        document.getElementById('vol-concentrate').innerText = `${concentrate.toFixed(1)} ml`;
+        document.getElementById('vol-water').innerText = `${water.toFixed(1)} ml`;
+    }
+
+    function getIlfordCompensatedTime(baseSeconds, targetTemp) {
+        if (targetTemp === 20.0) return baseSeconds;
+        const nomogram = [
+            { base: 210, t18: 270, t24: 135 }, { base: 240, t18: 300, t24: 150 }, { base: 270, t18: 330, t24: 180 },
+            { base: 300, t18: 360, t24: 195 }, { base: 360, t18: 435, t24: 240 }, { base: 420, t18: 525, t24: 300 }, 
+            { base: 480, t18: 585, t24: 330 }, { base: 540, t18: 675, t24: 375 }, { base: 600, t18: 750, t24: 420 },
+            { base: 660, t18: 825, t24: 450 }, { base: 720, t18: 885, t24: 495 }, { base: 780, t18: 960, t24: 540 }, 
+            { base: 840, t18: 1035, t24: 585 },{ base: 900, t18: 1110, t24: 630 }, { base: 1200, t18: 1455, t24: 825 }
+        ];
+        let point = nomogram.reduce((prev, curr) => Math.abs(curr.base - baseSeconds) < Math.abs(prev.base - baseSeconds) ? curr : prev);
+        let B = Math.log(point.t24 / point.base) / (24 - 20); 
+        let compSeconds = baseSeconds * Math.exp(B * (targetTemp - 20));
+        return Math.round(compSeconds / 15) * 15;
+    }
+
+    function updateProcess() {
+        if(isRunning) return;
+        const filmKey = document.getElementById('film-select').value;
+        const devKey = document.getElementById('dev-select').value;
+        const iso = document.getElementById('iso-select').value;
+        if(!filmKey || !devKey || !iso) return;
+
+        const baseSeconds = ilfordDB[filmKey].devs[devKey].isos[iso];
+        document.getElementById('base-time-display').innerText = formatTime(baseSeconds);
+        calculateVolume();
+
+        const targetTemp = parseFloat(document.getElementById('target-temp').value) || 20.0;
+        const compSeconds = getIlfordCompensatedTime(baseSeconds, targetTemp);
+        document.getElementById('final-time-display').innerText = formatTime(compSeconds);
+
+        currentDevTimeLeft = compSeconds; 
+        workflow = [];
+        
+        const isPreWetEnabled = document.getElementById('pre-wet-checkbox').checked;
+        if (isPreWetEnabled) {
+            workflow.push({ name: "0. 預濕 (PRE-WET)", duration: 60, isManual: false, autoPause: false, desc: "控溫。注入 20°C 清水，連續攪拌 1 分鐘後倒出。\n\n⚠️ 倒數歸零後將自動進入顯影，請迅速倒水並注入顯影液！" });
+        }
+
+        if (compSeconds <= 40) {
+            workflow.push({ name: "1. 顯影 (時間過短)", duration: compSeconds, isManual: false, autoPause: false, desc: "⚠️ 時間極短，請全程攪拌後倒出。", isSubStep: false });
+        } else {
+            workflow.push({ name: "1-1. 顯影: 首期攪拌", duration: 30, isManual: false, autoPause: false, desc: "前 30 秒連續翻轉攪拌，並適時敲擊片罐除泡。", isSubStep: false });
+            
+            let rem = compSeconds - 40; 
+            let roundNum = 1;
+            let stepNum = 2; 
+            
+            while (rem > 0) {
+                if (rem >= 30) {
+                    workflow.push({ name: `1-${stepNum++}. 顯影: Round ${roundNum} 靜置`, duration: 25, isManual: false, autoPause: false, desc: "標準靜置期。請勿搖晃片罐。", isSubStep: true });
+                    workflow.push({ name: `1-${stepNum++}. 顯影: Round ${roundNum} 攪拌`, duration: 5, isManual: false, autoPause: false, desc: "請進行 5 秒鐘攪拌 (反轉或畫圓旋轉)。", isSubStep: true });
+                    rem -= 30;
+                    roundNum++;
+                } else {
+                    workflow.push({ name: `1-${stepNum++}. 顯影: Round ${roundNum} 最終靜置`, duration: rem, isManual: false, autoPause: false, desc: "最終靜置期。請勿搖晃片罐，準備倒出藥液。", isSubStep: true });
+                    rem = 0;
+                }
+            }
+            workflow.push({ name: `1-${stepNum}. 顯影: 倒出藥液`, duration: 10, isManual: false, autoPause: false, desc: "⚠️ 顯影即將結束！請立刻將藥水倒出至回收瓶。\n\n⚠️ 倒數歸零後將自動進入停影，請迅速注入停影液！", isSubStep: false, isPourOut: true });
+        }
+
+        workflow.push({ name: "2. 停影 (STOP BATH)", duration: 30, isManual: false, autoPause: true, desc: "注入停影液，連續攪拌 30 秒後倒出。\n\n⚠️ 停影結束後系統將自動暫停，請安心倒出藥液。", isSubStep: false });
+
+        workflow.push({ name: "3-1. 定影: 首輪攪拌", duration: 60, isManual: false, autoPause: false, desc: "定影第 1 分鐘，請進行連續不斷的攪拌。", isSubStep: false });
+        workflow.push({ name: "3-2. 定影: 首輪靜置", duration: 60, isManual: false, autoPause: false, desc: "定影第 2 分鐘，請完全靜置片罐。", isSubStep: true });
+        workflow.push({ name: "3-3. 定影: 循環攪拌", duration: 10, isManual: false, autoPause: false, desc: "定影後段循環：請攪拌 10 秒鐘。", isSubStep: true });
+        workflow.push({ name: "3-4. 定影: 循環靜置", duration: 50, isManual: false, autoPause: false, desc: "定影後段循環：請靜置 50 秒。", isSubStep: true });
+        workflow.push({ name: "3-5. 定影: 循環攪拌", duration: 10, isManual: false, autoPause: false, desc: "定影後段循環：請攪拌 10 秒鐘。", isSubStep: true });
+        workflow.push({ name: "3-6. 定影: 循環靜置", duration: 50, isManual: false, autoPause: false, desc: "定影後段循環：請靜置 50 秒。", isSubStep: true });
+        workflow.push({ name: "3-7. 定影: 循環攪拌", duration: 10, isManual: false, autoPause: false, desc: "定影後段循環：請攪拌 10 秒鐘。", isSubStep: true });
+        workflow.push({ name: "3-8. 定影: 循環靜置 & 倒出", duration: 50, isManual: false, autoPause: true, desc: "定影最後階段，靜置後將定影液倒出。", isSubStep: true, isPourOut: true });
+
+        workflow.push({ name: "4. 階段水洗 (5、10、20次)", isManual: true, autoPause: true, desc: "請依序完成三次水洗：\n1. 注水 → 攪拌(反轉) 5 次 → 倒掉\n2. 注水 → 攪拌(反轉) 10 次 → 倒掉\n3. 注水 → 攪拌(反轉) 20 次 → 倒掉", isSubStep: false });
+        workflow.push({ name: "5. 海波去除 (WASH AID)", duration: 300, isManual: false, autoPause: true, desc: "加入水洗促進液，連續攪拌(反轉) 5 分鐘後倒掉。", isSubStep: false, isPourOut: true });
+        workflow.push({ name: "6. 階段水洗 (5、10、20次)", isManual: true, autoPause: true, desc: "請依序完成三次水洗：\n1. 注水 → 攪拌(反轉) 5 次 → 倒掉\n2. 注水 → 攪拌(反轉) 10 次 → 倒掉\n3. 注水 → 攪拌(反轉) 20 次 → 倒掉", isSubStep: false });
+        workflow.push({ name: "7. 去水斑 (RINSE)", duration: 60, isManual: false, autoPause: true, desc: "加入去水斑液，完全靜置浸泡 1 分鐘後取出晾乾。", isSubStep: false });
+
+        let totalSec = workflow.reduce((acc, step) => acc + (step.isManual ? (step.name.includes('水洗') ? 90 : 30) : step.duration), 0);
+        document.getElementById('total-process-time').innerText = formatTime(totalSec);
+
+        renderWorkflowUI();
+        setupCurrentStep();
+    }
+
+    function renderWorkflowUI() {
+        const uiList = document.getElementById('workflow-ui');
+        uiList.innerHTML = "";
+        workflow.forEach((step, idx) => {
+            const li = document.createElement('li');
+            li.className = `workflow-item ${step.isSubStep ? 'sub-step' : ''} ${idx === currentStepIndex ? 'active' : ''} ${idx < currentStepIndex ? 'completed' : ''}`;
+            li.innerHTML = `<span>${step.name}</span><span>${step.isManual ? '手動 (MANUAL)' : formatTime(step.duration)}</span>`;
+            uiList.appendChild(li);
+        });
+        
+        const activeItem = uiList.querySelector('.active');
+        if(activeItem) { activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+
+    function setupCurrentStep() {
+        if (workflow.length === 0) return;
+        const step = workflow[currentStepIndex];
+        
+        document.getElementById('action-title').innerText = step.name;
+        document.getElementById('agitation-desc').innerText = step.desc + (!step.isManual ? "\n\n⚠️ 點擊 [開始此步驟] 繼續。" : "\n\n點擊下方按鈕以推進流程。");
+        
+        const actionTimeEl = document.getElementById('action-time');
+        const btnStart = document.getElementById('btn-start');
+        
+        if (step.isPourOut) actionTimeEl.classList.add('pour-out-mode');
+        else actionTimeEl.classList.remove('pour-out-mode');
+
+        if (step.isManual) {
+            timeLeft = 0;
+            actionTimeEl.innerText = "MANUAL";
+            actionTimeEl.classList.add("manual-mode");
+            btnStart.innerText = "✔️ 完成手動，進入下一步";
+            btnStart.className = "btn btn-manual";
+        } else {
+            timeLeft = step.duration;
+            actionTimeEl.innerText = formatTime(timeLeft);
+            actionTimeEl.classList.remove("manual-mode");
+            btnStart.innerText = currentStepIndex === 0 ? "啟動排程 (START)" : "開始此步驟 (START)";
+            btnStart.className = "btn btn-primary";
+        }
+
+        if (step.name.includes("顯影")) {
+            document.getElementById('dev-total-timer-container').style.display = "inline-block";
+            document.getElementById('dev-total-time').innerText = formatTime(currentDevTimeLeft);
+        } else {
+            document.getElementById('dev-total-timer-container').style.display = "none";
+        }
+    }
+
+    function startTimerCore() {
+        clearInterval(timerInterval);
+        isRunning = true;
+        const step = workflow[currentStepIndex];
+        document.getElementById('btn-start').innerText = "暫停計時 (PAUSE)";
+        setFormControlsLocked(true);
+        document.getElementById('agitation-desc').innerText = step.desc;
+        
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                document.getElementById('action-time').innerText = formatTime(timeLeft);
+                
+                const currentStep = workflow[currentStepIndex];
+                if (currentStep.name.includes("顯影") && currentDevTimeLeft > 0) {
+                    currentDevTimeLeft--;
+                    document.getElementById('dev-total-time').innerText = formatTime(currentDevTimeLeft);
+                }
+                if (timeLeft <= 3 && timeLeft > 0) playBeep(600, 0.05);
+            } else {
+                clearInterval(timerInterval);
+                isRunning = false;
+                if (currentStepIndex < workflow.length - 1) {
+                    currentStepIndex++; 
+                    renderWorkflowUI(); 
+                    
+                    const nextStep = workflow[currentStepIndex];
+                    const prevStep = workflow[currentStepIndex - 1];
+                    
+                    if (prevStep.autoPause) {
+                        playBeep(900, 0.8); 
+                        setupCurrentStep(); 
+                    } else {
+                        setupCurrentStep();
+                        if(nextStep.name.includes('攪拌')) playBeep(850, 0.15);
+                        else playBeep(523, 0.2);
+                        startTimerCore();
+                    }
+                } else {
+                    finishProcess();
+                }
+            }
+        }, 1000);
+    }
+
+    function toggleTimer() {
+        const step = workflow[currentStepIndex];
+        
+        if (step.isManual) {
+            playBeep(900, 0.3);
+            if (currentStepIndex < workflow.length - 1) {
+                currentStepIndex++; renderWorkflowUI(); setupCurrentStep();
+            } else { finishProcess(); }
+            return;
+        }
+
+        const btn = document.getElementById('btn-start');
+        if (isRunning) {
+            clearInterval(timerInterval); isRunning = false;
+            btn.innerText = "繼續計時 (RESUME)"; 
+            document.getElementById('agitation-desc').innerText = "計時已手動暫停。";
+        } else {
+            if(step.name.includes('攪拌')) playBeep(850, 0.15);
+            else playBeep(523, 0.2);
+            startTimerCore();
+        }
+    }
+
+    function finishProcess() {
+        clearInterval(timerInterval); isRunning = false;
+        document.getElementById('action-title').innerText = "大功告成 (PROCESS COMPLETE)";
+        const actionTimeEl = document.getElementById('action-time');
+        actionTimeEl.innerText = "OK";
+        actionTimeEl.classList.remove("manual-mode", "pour-out-mode");
+        document.getElementById('dev-total-timer-container').style.display = "none";
+        document.getElementById('agitation-desc').innerText = "🎉 全套程序已完成！請開啟片罐，將底片拿出來水洗夾吊掛晾乾。";
+        const btn = document.getElementById('btn-start');
+        btn.innerText = "重置系統";
+        btn.className = "btn btn-primary";
+        setFormControlsLocked(false);
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval); isRunning = false; currentStepIndex = 0;
+        document.getElementById('btn-start').innerText = "啟動排程";
+        document.getElementById('btn-start').className = "btn btn-primary";
+        setFormControlsLocked(false); updateProcess();
+    }
+
+    function setFormControlsLocked(locked) {
+        const ids = ['film-select', 'iso-select', 'dev-select', 'target-temp', 'tank-volume', 'pre-wet-checkbox'];
+        ids.forEach(id => document.getElementById(id).disabled = locked);
+    }
+    
+    function toggleSafelight() { document.body.classList.toggle('safelight-mode'); }
+    
+    // PWA Service Worker 註冊
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('暗房快取引擎已啟動', reg.scope))
+            .catch(err => console.log('暗房快取引擎啟動失敗', err));
+        });
+    }
+
+    window.onload = initUI;
+</script>
+</body>
+</html>

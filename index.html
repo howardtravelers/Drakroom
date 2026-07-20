@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Personal Darkroom Master - PRO MAX</title>
+    <!-- 呼叫 PWA 安裝設定檔 -->
     <link rel="manifest" href="manifest.json">
+    <!-- 設定 iOS 專屬 Web App 標籤 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Darkroom">
@@ -160,9 +162,22 @@
 
         <div class="info-box mixer-box">
             <label style="color: var(--status-info); font-weight: bold; margin-bottom: 10px;">🧪 藥水調配計算機 (ml)</label>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <select id="tank-preset" onchange="applyTankPreset()" style="background-color: rgba(255,255,255,0.05); font-size: 0.85rem; padding: 8px;">
+                    <option value="">-- 快速選擇沖片罐品牌與卷數 --</option>
+                    <option value="300">Paterson / AP - 135 單卷 (300 ml)</option>
+                    <option value="600">Paterson / AP - 135 雙卷 (600 ml)</option>
+                    <option value="500">Paterson / AP - 120 單卷 (500 ml)</option>
+                    <option value="1000">Paterson / AP - 120 雙卷 (1000 ml)</option>
+                    <option value="240">JOBO 1520 - 135 單卷 (240 ml)</option>
+                    <option value="480">JOBO 1520 - 135 雙卷 (480 ml)</option>
+                    <option value="470">JOBO 1520 - 120 單卷 (470 ml)</option>
+                </select>
+            </div>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <span style="font-size: 0.85rem; color: #ccc;">沖片罐總容量:</span>
-                <input type="number" id="tank-volume" value="600" step="50" min="100" style="width: 100px; padding: 6px;" oninput="calculateVolume()">
+                <span style="font-size: 0.85rem; color: #ccc;">自訂總容量:</span>
+                <input type="number" id="tank-volume" value="600" step="10" min="100" style="width: 80px; padding: 6px;" oninput="document.getElementById('tank-preset').value=''; calculateVolume()">
+                <span style="font-size: 0.85rem; color: #ccc;">ml</span>
             </div>
             <div class="mixer-result">
                 <div class="mixer-item">
@@ -185,7 +200,7 @@
                 <div class="action-time" id="action-time">00:00</div>
                 
                 <div id="dev-total-timer-container" style="display: none; font-size: 1.1rem; color: var(--status-warning); font-weight: bold; margin-bottom: 12px; letter-spacing: 1px; background: rgba(255, 159, 10, 0.15); padding: 8px 16px; border-radius: 6px; border: 1px dashed var(--status-warning);">
-                    顯影總剩餘時間 <span id="dev-total-time" style="font-variant-numeric: tabular-nums; font-size: 1.4rem; margin-left: 8px;">00:00</span>
+                    顯影已耗時間 <span id="dev-total-time" style="font-variant-numeric: tabular-nums; font-size: 1.4rem; margin-left: 8px;">00:00 / 00:00</span>
                 </div>
 
                 <div class="agitation-desc" id="agitation-desc">確認左側數據後，請準備好第一劑藥水，點擊啟動。</div>
@@ -331,6 +346,43 @@
             "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 200: 930 } },
             "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 200: 870, 400: 1200 } }
         }},
+        "ilford_pan_100": { name: "ILFORD PAN 100", box: 100, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 50: 510, 100: 630, 200: 750 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 100: 240, 200: 300 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 50: 330, 100: 420, 200: 480 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 50: 450, 100: 660 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 100: 240, 200: 300 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 50: 300, 100: 390, 200: 480 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 100: 300 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 100: 450 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 50: 420, 100: 540, 200: 660 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 50: 510, 100: 690, 200: 930 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 50: 1050, 100: 1260 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 100: 510, 200: 540 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 100: 630, 200: 840 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 100: 870 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 50: 570, 100: 750 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 50: 810, 100: 930 } }
+        }},
+        "ilford_pan_400": { name: "ILFORD PAN 400", box: 400, devs: {
+            "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 200: 420, 400: 480, 800: 540 } },
+            "lc29_1_9": { name: "ILFOTEC LC29 (1+9)", ratio: 9, isos: { 400: 180, 800: 300 } },
+            "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 200: 300, 400: 360, 800: 540 } },
+            "lc29_1_29": { name: "ILFOTEC LC29 (1+29)", ratio: 29, isos: { 200: 420, 400: 540 } },
+            "hc_1_15": { name: "ILFOTEC HC (1+15)", ratio: 15, isos: { 400: 180, 800: 300 } },
+            "hc_1_31": { name: "ILFOTEC HC (1+31)", ratio: 31, isos: { 200: 300, 400: 360, 800: 540 } },
+            "ilfosol3_1_9": { name: "ILFOSOL 3 (1+9)", ratio: 9, isos: { 200: 330, 400: 420, 800: 750 } },
+            "ilfosol3_1_14": { name: "ILFOSOL 3 (1+14)", ratio: 14, isos: { 200: 450, 400: 630, 800: 1110 } },
+            "id11_stock": { name: "ID-11 (Stock)", ratio: 0, isos: { 200: 360, 400: 420, 800: 600 } },
+            "id11_1_1": { name: "ID-11 (1+1)", ratio: 1, isos: { 200: 720, 400: 780, 800: 960 } },
+            "id11_1_3": { name: "ID-11 (1+3)", ratio: 3, isos: { 200: 1080, 400: 1200 } },
+            "microphen_stock": { name: "MICROPHEN (Stock)", ratio: 0, isos: { 400: 360, 800: 420 } },
+            "microphen_1_1": { name: "MICROPHEN (1+1)", ratio: 1, isos: { 400: 720, 800: 780 } },
+            "microphen_1_3": { name: "MICROPHEN (1+3)", ratio: 3, isos: { 400: 1380, 800: 1440 } },
+            "perceptol_stock": { name: "PERCEPTOL (Stock)", ratio: 0, isos: { 200: 600, 400: 660 } },
+            "perceptol_1_1": { name: "PERCEPTOL (1+1)", ratio: 1, isos: { 200: 840, 400: 960 } },
+            "perceptol_1_3": { name: "PERCEPTOL (1+3)", ratio: 3, isos: { 200: 1320 } }
+        }},
         "kentmere_100": { name: "KENTMERE PAN 100", box: 100, devs: {
             "ddx_1_4": { name: "ILFOTEC DD-X (1+4)", ratio: 4, isos: { 50: 510, 100: 630, 200: 750 } },
             "lc29_1_19": { name: "ILFOTEC LC29 (1+19)", ratio: 19, isos: { 100: 330, 200: 420 } },
@@ -367,7 +419,8 @@
     };
 
     let currentStepIndex = 0; let timeLeft = 0; let timerInterval = null; let isRunning = false; let workflow = [];
-    let currentDevTimeLeft = 0; 
+    let totalDevTime = 0; // 總顯影時間
+    let currentDevTimeElapsed = 0; // 顯影已耗時間 (Count-up)
 
     function playBeep(freq = 600, duration = 0.1) {
         try {
@@ -422,6 +475,15 @@
         updateProcess();
     }
 
+    function applyTankPreset() {
+        const presetSelect = document.getElementById('tank-preset');
+        const volumeInput = document.getElementById('tank-volume');
+        if (presetSelect.value) {
+            volumeInput.value = presetSelect.value;
+            calculateVolume();
+        }
+    }
+
     function calculateVolume() {
         const filmKey = document.getElementById('film-select').value;
         const devKey = document.getElementById('dev-select').value;
@@ -466,7 +528,8 @@
         const compSeconds = getIlfordCompensatedTime(baseSeconds, targetTemp);
         document.getElementById('final-time-display').innerText = formatTime(compSeconds);
 
-        currentDevTimeLeft = compSeconds; 
+        totalDevTime = compSeconds; 
+        currentDevTimeElapsed = 0; 
         workflow = [];
         
         const isPreWetEnabled = document.getElementById('pre-wet-checkbox').checked;
@@ -494,10 +557,10 @@
                     rem = 0;
                 }
             }
-            workflow.push({ name: `1-${stepNum}. 顯影: 倒出藥液`, duration: 10, isManual: false, autoPause: false, desc: "⚠️ 顯影即將結束！請立刻將藥水倒出至回收瓶。\n\n⚠️ 倒數歸零後將自動進入停影，請迅速注入停影液！", isSubStep: false, isPourOut: true });
+            workflow.push({ name: `1-${stepNum}. 顯影: 倒出藥液`, duration: 10, isManual: false, autoPause: false, desc: "⚠️ 顯影即將結束！請立刻將藥水倒出至回收瓶。\n\n⚠️ 倒數歸零後將自動進入停顯，請迅速注入停顯液！", isSubStep: false, isPourOut: true });
         }
 
-        workflow.push({ name: "2. 停影 (STOP BATH)", duration: 30, isManual: false, autoPause: true, desc: "注入停影液，連續攪拌 30 秒後倒出。\n\n⚠️ 停影結束後系統將自動暫停，請安心倒出藥液。", isSubStep: false });
+        workflow.push({ name: "2. 停顯 (STOP BATH)", duration: 30, isManual: false, autoPause: true, desc: "注入停顯液，連續攪拌 30 秒後倒出。\n\n⚠️ 停顯結束後系統將自動暫停，請安心倒出藥液。", isSubStep: false });
 
         workflow.push({ name: "3-1. 定影: 首輪攪拌", duration: 60, isManual: false, autoPause: false, desc: "定影第 1 分鐘，請進行連續不斷的攪拌。", isSubStep: false });
         workflow.push({ name: "3-2. 定影: 首輪靜置", duration: 60, isManual: false, autoPause: false, desc: "定影第 2 分鐘，請完全靜置片罐。", isSubStep: true });
@@ -563,7 +626,7 @@
 
         if (step.name.includes("顯影")) {
             document.getElementById('dev-total-timer-container').style.display = "inline-block";
-            document.getElementById('dev-total-time').innerText = formatTime(currentDevTimeLeft);
+            document.getElementById('dev-total-time').innerText = `${formatTime(currentDevTimeElapsed)} / ${formatTime(totalDevTime)}`;
         } else {
             document.getElementById('dev-total-timer-container').style.display = "none";
         }
@@ -583,9 +646,9 @@
                 document.getElementById('action-time').innerText = formatTime(timeLeft);
                 
                 const currentStep = workflow[currentStepIndex];
-                if (currentStep.name.includes("顯影") && currentDevTimeLeft > 0) {
-                    currentDevTimeLeft--;
-                    document.getElementById('dev-total-time').innerText = formatTime(currentDevTimeLeft);
+                if (currentStep.name.includes("顯影") && currentDevTimeElapsed < totalDevTime) {
+                    currentDevTimeElapsed++;
+                    document.getElementById('dev-total-time').innerText = `${formatTime(currentDevTimeElapsed)} / ${formatTime(totalDevTime)}`;
                 }
                 if (timeLeft <= 3 && timeLeft > 0) playBeep(600, 0.05);
             } else {
@@ -659,7 +722,7 @@
     }
 
     function setFormControlsLocked(locked) {
-        const ids = ['film-select', 'iso-select', 'dev-select', 'target-temp', 'tank-volume', 'pre-wet-checkbox'];
+        const ids = ['film-select', 'iso-select', 'dev-select', 'target-temp', 'tank-volume', 'tank-preset', 'pre-wet-checkbox'];
         ids.forEach(id => document.getElementById(id).disabled = locked);
     }
     

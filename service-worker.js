@@ -1,4 +1,4 @@
-const CACHE_NAME = 'darkroom-v1-max';
+const CACHE_NAME = 'darkroom-v2-max';
 const urlsToCache = [
   './',
   './index.html',
